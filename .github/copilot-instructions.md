@@ -1,4 +1,4 @@
-# Copilot Instructions for repo_template
+# Copilot Instructions for tdl_sdk
 
 ## IMPORTANT: This is a Template Project
 
@@ -7,8 +7,8 @@
 When working with this codebase, the correct workflow is:
 
 1. Fork or clone this repository to create a new project
-2. Rename `repo_template` to your actual project name throughout the codebase
-3. Rename `RepoTemplate` to your actual project display name
+2. Rename `tdl_sdk` to your actual project name throughout the codebase
+3. Rename `TDL Python SDK` to your actual project display name
 4. Then begin development on the renamed project
 
 If a user asks to add features or modify code, first confirm whether they want to:
@@ -24,9 +24,9 @@ This is a **production-ready Python project template** using modern tooling with
 
 ### src/ Layout with Strict Packaging
 
-- Source code lives in `src/repo_template/` (not root-level package)
+- Source code lives in `src/tdl_sdk/` (not root-level package)
 - This prevents accidental imports of local code during tests
-- When forking: rename both the `src/repo_template/` directory AND all references in `pyproject.toml`, scripts, and workflows
+- When forking: rename both the `src/tdl_sdk/` directory AND all references in `pyproject.toml`, scripts, and workflows
 
 ### uv-First Dependency Management
 
@@ -38,8 +38,8 @@ This is a **production-ready Python project template** using modern tooling with
 
 ### Dual CLI Entry Points
 
-- Main CLI: `uv run repo_template` or `uv run cli` (via `project.scripts` in pyproject.toml)
-- Both `cli` and `repo_template` commands point to `repo_template.cli:main`
+- Main CLI: `uv run tdl_sdk` or `uv run cli` (via `project.scripts` in pyproject.toml)
+- Both `cli` and `tdl_sdk` commands point to `tdl_sdk.cli:main`
 
 ## Developer Workflows
 
@@ -110,7 +110,7 @@ make format                   # Run pre-commit hooks
 ### File Naming & Imports
 
 - Test files: `test_*.py` in `tests/` directory
-- Import local packages: Use `from repo_template.module import ...` (never relative)
+- Import local packages: Use `from tdl_sdk.module import ...` (never relative)
 - Scripts with dependencies: Use PEP 723 inline metadata (see `scripts/gen_docs.py` header)
 
 ## Git Conventions
@@ -150,7 +150,7 @@ make format                   # Run pre-commit hooks
 
 - Script: `scripts/gen_docs.py` generates markdown docs from Python files/classes
 - Two modes: `--mode class` (default, one page per class) or `--mode file` (one page per file)
-- Preserves folder structure in output: `src/repo_template/cli.py` → `docs/Reference/cli.md`
+- Preserves folder structure in output: `src/tdl_sdk/cli.py` → `docs/Reference/cli.md`
 - Async file processing with `anyio` and rich progress bars
 - Optional notebook execution via `--execute` flag
 - Concurrency controlled via `--concurrency` (default: 10)
@@ -273,23 +273,23 @@ This section describes the essential steps to transform this template into your 
 Use GitHub's "Use this template" button or clone directly:
 
 ```bash
-git clone https://github.com/Mai0313/repo_template.git my_new_project
+git clone https://github.com/Mai0313/tdl_sdk.git my_new_project
 cd my_new_project
 ```
 
 ### Step 2: Rename Package and Module
 
-Replace `repo_template` with your new package name everywhere:
+Replace `tdl_sdk` with your new package name everywhere:
 
-- Rename the `src/repo_template/` directory to `src/your_new_project/`
-- Update all imports in Python files from `repo_template` to `your_new_project`
+- Rename the `src/tdl_sdk/` directory to `src/your_new_project/`
+- Update all imports in Python files from `tdl_sdk` to `your_new_project`
 - Update `pyproject.toml` references to the package name
 - Update workflow files in `.github/workflows/`
 - Update Docker labels in `docker/Dockerfile` and `.devcontainer/Dockerfile`
 
 ### Step 3: Rename Display Titles
 
-Replace `RepoTemplate` with your project's display name:
+Replace `TDL Python SDK` with your project's display name:
 
 - Update `mkdocs.yml` site_name
 - Update README files titles and badges
@@ -305,7 +305,7 @@ Edit `pyproject.toml` to update:
 
 ### Step 5: Update Repository URLs
 
-Replace `Mai0313/repo_template` with your repository path:
+Replace `Mai0313/tdl_sdk` with your repository path:
 
 - Update `mkdocs.yml`: repo_name, repo_url, site_url
 - Update all three README files: badges, links, and "Use this template" URL
@@ -358,5 +358,5 @@ make test                     # Verify tests pass
 - Always prefix script execution with `uv run <command>` to ensure correct environment
 - Coverage threshold is set in `[tool.pytest.ini_options]` at `--cov-fail-under=80`
 - Large files require explicit bypass of `check-added-large-files` pre-commit hook if needed
-- Always use absolute imports: `from repo_template.module import ...`, never relative imports
+- Always use absolute imports: `from tdl_sdk.module import ...`, never relative imports
 - Always run `make clean` before regenerating docs to avoid stale references

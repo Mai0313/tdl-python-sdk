@@ -3,7 +3,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 COPY --from=ghcr.io/astral-sh/ty:latest /ty /bin/
 
 LABEL maintainer="Wei Lee <mai@mai0313.com>" \
-    org.label-schema.name="repo_template" \
+    org.label-schema.name="tdl_sdk" \
     org.label-schema.vendor="Wei Lee" \
     org.label-schema.schema-version="1.0" \
     com.centurylinklabs.watchtower.stop-signal="SIGINT"

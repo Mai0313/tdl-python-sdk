@@ -1,308 +1,332 @@
 <div align="center" markdown="1">
 
-# Python Project Template
+# TDL Python SDK
 
-[![PyPI version](https://img.shields.io/pypi/v/swebenchv2.svg)](https://pypi.org/project/swebenchv2/)
 [![python](https://img.shields.io/badge/-Python_%7C_3.11%7C_3.12%7C_3.13%7C_3.14-blue?logo=python&logoColor=white)](https://www.python.org/downloads/source/)
 [![uv](https://img.shields.io/badge/-uv_dependency_management-2C5F2D?logo=python&logoColor=white)](https://docs.astral.sh/uv/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Pydantic v2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydantic/pydantic/main/docs/badge/v2.json)](https://docs.pydantic.dev/latest/contributing/#badges)
-[![tests](https://github.com/Mai0313/repo_template/actions/workflows/test.yml/badge.svg)](https://github.com/Mai0313/repo_template/actions/workflows/test.yml)
-[![code-quality](https://github.com/Mai0313/repo_template/actions/workflows/code-quality-check.yml/badge.svg)](https://github.com/Mai0313/repo_template/actions/workflows/code-quality-check.yml)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Mai0313/repo_template)
-[![license](https://img.shields.io/badge/License-MIT-green.svg?labelColor=gray)](https://github.com/Mai0313/repo_template/tree/main?tab=License-1-ov-file)
-[![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Mai0313/repo_template/pulls)
-[![contributors](https://img.shields.io/github/contributors/Mai0313/repo_template.svg)](https://github.com/Mai0313/repo_template/graphs/contributors)
+[![tests](https://github.com/Mai0313/tdl-python-sdk/actions/workflows/test.yml/badge.svg)](https://github.com/Mai0313/tdl-python-sdk/actions/workflows/test.yml)
+[![code-quality](https://github.com/Mai0313/tdl-python-sdk/actions/workflows/code-quality-check.yml/badge.svg)](https://github.com/Mai0313/tdl-python-sdk/actions/workflows/code-quality-check.yml)
+[![license](https://img.shields.io/badge/License-MIT-green.svg?labelColor=gray)](https://github.com/Mai0313/tdl-python-sdk/tree/main?tab=License-1-ov-file)
+[![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Mai0313/tdl-python-sdk/pulls)
 
 </div>
 
-🚀 A production‑ready Python project template to help developers bootstrap new Python projects fast. It includes modern packaging, local tooling, Docker, and a complete CI/CD suite.
-
-> **Important**: This is a template repository. Do not develop directly on this repository. Instead, use it to create your own project by clicking the button below and following the setup instructions.
-
-Click [Use this template](https://github.com/Mai0313/repo_template/generate) to start a new repository from this scaffold.
+A type-safe Python SDK for [TDL](https://github.com/iyear/tdl) (Telegram Downloader). Wraps the `tdl` CLI binary via subprocess and provides a Pythonic, Pydantic-powered interface for all TDL operations.
 
 Other Languages: [English](README.md) | [繁體中文](README.zh-TW.md) | [简体中文](README.zh-CN.md)
 
-## ✨ Highlights
+## Features
 
-- Modern `src/` layout and type‑hinted code
-- Fast dependency management via `uv`
-- Pre‑commit suite: ruff, mdformat(+plugins), codespell, nbstripout, mypy, uv hooks
-- Strong typing: mypy with Pydantic plugin configuration
-- Pytest with coverage and xdist; PR coverage summary comment
-- Coverage gate at 80% with HTML/XML reports committed under `.github/`
-- MkDocs Material with mkdocstrings (inheritance diagrams), markdown‑exec, MathJax
-- Dev server at `0.0.0.0:9987`; bilingual docs scaffolded
-- Docs generator script: by class/file, optional notebook execution, concurrency, preserves folder structure
-- Async file processing via anyio and rich progress bars
-- Packaging with `uv build` and changelog via `git-cliff`
-- Automatic PEP 440 versioning from git via `dunamai` in CI
-- Dockerfile multi‑stage with uv/uvx and Node.js; Compose services (Redis/Postgres/Mongo/MySQL) with healthchecks and volumes
-- GitHub Actions: tests, quality, docs deploy, package build, docker image publish (GHCR with buildx cache), release drafter, auto labeler, secret scan, semantic PR, pre‑commit auto‑update
-- Pre‑commit runs on multiple git stages (pre‑commit, post‑checkout, post‑merge, post‑rewrite)
-- i18n‑friendly linting (Chinese punctuation allowed confusables)
-- Alternative env managers documented (Rye, Conda)
-- Legacy compatibility: export `requirements.txt` via `uv pip` if needed
+- Full coverage of all `tdl` commands: login, chat, download, upload, forward, backup, recover, migrate, extension
+- Strict typing with Pydantic BaseModel for all options and results
+- Enum types for mode/type parameters (LoginType, ExportType, ForwardMode, ListOutput)
+- Custom exception hierarchy with stdout/stderr/return_code attached
+- CLI flag serialization via `@computed_field` properties
 
-## 🚀 Quick Start
+## Prerequisites
 
-### For Template Users (Creating a New Project)
-
-This is the recommended workflow for starting a new project:
-
-1. **Create Your Repository**: Click [Use this template](https://github.com/Mai0313/repo_template/generate) to create a new repository
-
-2. **Clone and Setup**:
-
-    ```bash
-    git clone https://github.com/YOUR_USERNAME/your_new_project.git
-    cd your_new_project
-    make uv-install               # Install uv (only needed once)
-    uv sync                       # Install dependencies
-    uv tool install pre-commit    # Install pre-commit
-    ```
-
-3. **Rename the Project**:
-
-    - Rename `src/repo_template/` directory to `src/your_project_name/`
-    - Update all imports from `repo_template` to `your_project_name`
-    - Update `pyproject.toml` with your project details:
-        - Project name, version, description, authors
-        - Homepage and Repository URLs
-        - CLI script names if needed
-    - Update `mkdocs.yml`: site_name, site_url, repo_name, repo_url, site_author
-    - Update all three README files (preserve badges, only update URLs)
-    - Update `.github/CODEOWNERS` with your GitHub username
-    - Update Docker labels in `docker/Dockerfile` and `.devcontainer/Dockerfile`
-
-4. **Verify Setup**:
-
-    ```bash
-    make format                   # Run pre-commit hooks
-    make test                     # Run tests
-    uv run your_project_name      # Test your CLI
-    ```
-
-### For Template Developers (Testing This Template)
-
-If you're contributing to this template:
+Install the [TDL](https://github.com/iyear/tdl) CLI tool first:
 
 ```bash
-make uv-install               # Install uv
-uv sync                       # Install dependencies
-uv tool install pre-commit    # Install pre-commit
-make format                   # Run pre-commit hooks
-make test                     # Run tests
-uv run repo_template          # Test example CLI
+# macOS / Linux
+curl -sSL https://docs.iyear.me/tdl/install.sh | bash
+
+# or via Go
+go install github.com/iyear/tdl@latest
 ```
 
-## 🧰 Commands Reference
+Verify installation:
 
 ```bash
-# Development
-make help               # List available make targets
-make clean              # Clean caches, artifacts and generated docs
-make format             # Run all pre-commit hooks
-make test               # Run pytest across the repository
-make gen-docs           # Generate docs from src/ and scripts/
-
-# Git submodules (if you use them)
-make submodule-init     # Init and update all submodules
-make submodule-update   # Update all submodules to remote
-
-# Dependencies (via uv)
-make uv-install         # Install uv on your system
-uv add <pkg>            # Add production dependency
-uv add <pkg> --dev      # Add development dependency
-# Sync optional groups
-uv sync --group dev     # Install dev-only deps (pre-commit, poe, notebook)
-uv sync --group test    # Install test-only deps
-uv sync --group docs    # Install docs-only deps
+tdl version
 ```
 
-## 📚 Documentation
-
-- Live docs are built with MkDocs Material.
-- Generate API docs locally and serve:
+## Installation
 
 ```bash
-uv sync --group docs
-make gen-docs
-uv run mkdocs serve    # http://localhost:9987
+pip install tdl-python-sdk
+
+# or with uv
+uv add tdl-python-sdk
 ```
 
-- Auto generation script: `scripts/gen_docs.py` (supports .py and .ipynb)
+## Quick Start
+
+```python
+from tdl_sdk import TDL, GlobalOptions, LoginOptions, LoginType
+
+# Create client with global options
+client = TDL(global_options=GlobalOptions(ns="my_session", proxy="socks5://127.0.0.1:1080"))
+
+# Login via QR code
+client.login(LoginOptions(login_type=LoginType.QR))
+```
+
+## Usage Guide
+
+### Login
+
+TDL supports three login methods: desktop client, verification code, and QR code.
+
+```python
+from tdl_sdk import TDL, LoginOptions, LoginType
+
+client = TDL()
+
+# Login via QR code (recommended)
+client.login(LoginOptions(login_type=LoginType.QR))
+
+# Login via desktop client (auto-detect path)
+client.login(LoginOptions(login_type=LoginType.DESKTOP))
+
+# Login via desktop client with custom path and passcode
+client.login(
+    LoginOptions(
+        login_type=LoginType.DESKTOP, desktop="/path/to/Telegram Desktop", passcode="your_passcode"
+    )
+)
+
+# Login via verification code
+client.login(LoginOptions(login_type=LoginType.CODE))
+```
+
+### Chat Operations
+
+#### List Chats
+
+```python
+from tdl_sdk import TDL, ChatListOptions, ListOutput
+
+client = TDL()
+
+# List all chats as table
+client.chat_ls()
+
+# List chats as JSON with filter
+result = client.chat_ls(ChatListOptions(output=ListOutput.JSON, chat_filter="Type == 'channel'"))
+print(result.stdout)
+```
+
+#### Export Messages
+
+```python
+from tdl_sdk import TDL, ChatExportOptions, ExportType
+
+client = TDL()
+
+# Export last 100 messages from a channel
+client.chat_export(
+    ChatExportOptions(
+        chat="my_channel",
+        export_type=ExportType.LAST,
+        export_input=[100],
+        output="export.json",
+        with_content=True,
+    )
+)
+
+# Export all messages (including non-media)
+client.chat_export(
+    ChatExportOptions(
+        chat="my_channel", export_all=True, with_content=True, output="full_export.json"
+    )
+)
+```
+
+#### Export Users
+
+```python
+from tdl_sdk import TDL, ChatUsersOptions
+
+client = TDL()
+
+# Export all users from a channel
+client.chat_users(ChatUsersOptions(chat="my_channel", output="users.json"))
+```
+
+### Download
+
+```python
+from tdl_sdk import TDL, DownloadOptions
+
+client = TDL()
+
+# Download by Telegram message links
+client.download(
+    DownloadOptions(
+        url=["https://t.me/channel/123", "https://t.me/channel/456"], download_dir="./downloads"
+    )
+)
+
+# Download from exported JSON with filters
+client.download(
+    DownloadOptions(
+        file=["export.json"],
+        download_dir="./media",
+        include=["mp4", "mkv"],  # only video files
+        skip_same=True,  # skip duplicates
+        takeout=True,  # use takeout for lower flood limits
+        template="{{ .DialogID }}_{{ .MessageID }}_{{ filenamify .FileName }}",
+    )
+)
+
+# Serve media as HTTP server
+client.download(DownloadOptions(file=["export.json"], serve=True, port=9090))
+```
+
+### Upload
+
+```python
+from tdl_sdk import TDL, UploadOptions
+
+client = TDL()
+
+# Upload files to Saved Messages
+client.upload(UploadOptions(path=["/data/video.mp4", "/data/photos/"]))
+
+# Upload to a specific chat as photos
+client.upload(UploadOptions(path=["./images/"], chat="my_channel", photo=True))
+
+# Upload and remove local files after success
+client.upload(UploadOptions(path=["./temp_files/"], chat="my_channel", rm=True))
+```
+
+### Forward
+
+```python
+from tdl_sdk import TDL, ForwardOptions, ForwardMode
+
+client = TDL()
+
+# Forward messages (direct mode)
+client.forward(
+    ForwardOptions(forward_from=["https://t.me/source_channel/123"], to="target_channel")
+)
+
+# Clone messages (no forward header)
+client.forward(
+    ForwardOptions(
+        forward_from=["https://t.me/source/123", "export.json"],
+        to="target_channel",
+        mode=ForwardMode.CLONE,
+        silent=True,
+    )
+)
+
+# Dry run to preview
+result = client.forward(
+    ForwardOptions(forward_from=["export.json"], to="target_channel", dry_run=True)
+)
+print(result.stdout)
+```
+
+### Backup / Recover / Migrate
+
+```python
+from tdl_sdk import TDL, BackupOptions, RecoverOptions, MigrateOptions
+
+client = TDL()
+
+# Backup session data
+client.backup(BackupOptions(dst="./my_backup.tdl"))
+
+# Recover from backup
+client.recover(RecoverOptions(file="./my_backup.tdl"))
+
+# Migrate to file-based storage
+client.migrate(MigrateOptions(to={"type": "file", "path": "/new/storage"}))
+```
+
+### Extension Management
+
+```python
+from tdl_sdk import TDL, ExtInstallOptions
+
+client = TDL()
+
+# Install an extension
+client.ext_install("github.com/user/tdl-ext-name")
+
+# Force reinstall
+client.ext_install("github.com/user/tdl-ext-name", ExtInstallOptions(force=True))
+
+# List installed extensions
+result = client.ext_list()
+print(result.stdout)
+
+# Upgrade / Remove
+client.ext_upgrade("ext-name")
+client.ext_remove("ext-name")
+```
+
+### Error Handling
+
+```python
+from tdl_sdk import TDL, DownloadOptions
+from tdl_sdk import TDLError, TDLNotFoundError, TDLCommandError, TDLTimeoutError
+
+client = TDL(timeout=300)
+
+try:
+    client.download(DownloadOptions(url=["https://t.me/channel/123"]))
+except TDLNotFoundError:
+    print("tdl binary not found. Please install tdl first.")
+except TDLTimeoutError as e:
+    print(f"Command timed out: {e}")
+except TDLCommandError as e:
+    print(f"Command failed (exit code {e.return_code}): {e.stderr}")
+except TDLError as e:
+    print(f"Unexpected error: {e}")
+```
+
+### Global Options
+
+Configure shared settings for all commands:
+
+```python
+from tdl_sdk import TDL, GlobalOptions
+
+client = TDL(
+    global_options=GlobalOptions(
+        ns="work_session",  # session namespace
+        proxy="socks5://127.0.0.1:1080",
+        threads=8,  # max threads per transfer
+        limit=4,  # max concurrent tasks
+        pool=16,  # DC pool size
+        debug=True,  # enable debug output
+        reconnect_timeout="10m",
+        storage={"type": "bolt", "path": "/custom/data"},
+    ),
+    tdl_path="/usr/local/bin/tdl",  # custom binary path
+    timeout=600,  # default timeout (seconds)
+)
+```
+
+## Architecture
+
+```
+src/tdl_sdk/
+    __init__.py          # Public API exports
+    _exceptions.py       # TDLError hierarchy
+    _enums.py            # LoginType, ExportType, ForwardMode, ListOutput
+    _models.py           # Pydantic models (GlobalOptions, *Options, TDLResult)
+    _runner.py           # TDLRunner - subprocess execution layer
+    _client.py           # TDL - user-facing facade
+```
+
+All classes are Pydantic BaseModel. Option models provide `cli_dict` and `cli_args` as `@computed_field` properties for automatic CLI flag serialization.
+
+## Development
 
 ```bash
-# Generate docs by class (default)
-uv run python ./scripts/gen_docs.py --source ./src --output ./docs/Reference gen_docs
-
-# Generate docs by file
-uv run python ./scripts/gen_docs.py --source ./src --output ./docs/Reference --mode file gen_docs
+git clone https://github.com/Mai0313/tdl-python-sdk.git
+cd tdl-python-sdk
+uv sync
+make test
 ```
 
-## 🐳 Docker and Local Services
+## License
 
-`docker-compose.yaml` includes optional services for local development: `redis`, `postgresql`, `mongodb`, `mysql`, and an example `app` service that runs the CLI.
-
-Create a `.env` file to configure ports and credentials (defaults shown):
-
-```bash
-REDIS_PORT=6379
-POSTGRES_DB=postgres
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_PORT=5432
-MONGO_PORT=27017
-MYSQL_ROOT_PASSWORD=root
-MYSQL_DATABASE=mysql
-MYSQL_USER=mysql
-MYSQL_PASSWORD=mysql
-MYSQL_PORT=3306
-```
-
-Run services:
-
-```bash
-docker compose up -d redis postgresql mongodb mysql
-
-# Or run the example app container
-docker compose up -d app
-```
-
-## 📦 Packaging and Distribution
-
-Build artifacts with uv (wheel and sdist go to `dist/`):
-
-```bash
-uv build
-```
-
-Publish to PyPI (requires `UV_PUBLISH_TOKEN`):
-
-```bash
-UV_PUBLISH_TOKEN=... uv publish
-```
-
-CI builds automatically run on tags matching `v*`, building multi-platform executables and Python packages, then uploading them to GitHub Release. To automate releases to PyPI, add the `UV_PUBLISH_TOKEN` secret in your repository settings (`build_release.yml` is already configured for automatic publishing).
-
-### Run your CLI locally and from PyPI
-
-- Local (from this repo):
-
-```bash
-uv run repo_template
-uv run cli
-```
-
-- From PyPI with `uvx` after publishing (ephemeral install):
-
-```bash
-# If your console script is named "repo_template"
-uvx repo_template
-
-# Disambiguate or pin a package/version
-uvx --from your-package-name==0.1.0 your-entrypoint
-```
-
-## 🧭 Optional task runner (Poe the Poet)
-
-Convenience tasks are defined under `[tool.poe.tasks]` in `pyproject.toml` and available after installing the dev group (`uv sync --group dev`) or via `uvx`:
-
-```bash
-uv run poe docs        # generate + serve docs (requires dev group)
-uv run poe gen         # generate + deploy docs (gh-deploy) (requires dev group)
-uv run poe main        # run CLI entry (same as uv run repo_template)
-
-# or ephemeral via uvx (no local install)
-uvx poe docs
-```
-
-## 🔁 CI/CD Actions Overview
-
-All workflows live in `.github/workflows/`. This section explains what each action does, when it runs, and what to configure.
-
-- Tests (`test.yml`)
-
-    - Trigger: Pull requests to `main` or `release/*` (ignores md files)
-    - Runs pytest on Python 3.11/3.12/3.13/3.14 with coverage and comments a summary
-    - Setup needed: none
-
-- Code Quality Check (`code-quality-check.yml`)
-
-    - Trigger: Pull requests
-    - Runs ruff and other pre-commit hooks
-    - Setup needed: none
-
-- Docs Deploy (`deploy.yml`)
-
-    - Trigger: Push to `main` and tags `v*`
-    - Builds `mkdocs` site and publishes to GitHub Pages
-    - Setup needed:
-        - Enable GitHub Pages for the repo (Actions → Pages)
-        - The workflow configures and uploads the site automatically
-
-- Build and Release (`build_release.yml`)
-
-    - Trigger: Tags `v*` push or manual workflow dispatch
-    - Builds multi-platform executables (via PyInstaller):
-        - macOS (ARM64, x64)
-        - Linux (x64 GNU, ARM64 GNU)
-        - Windows (x64, ARM64)
-    - Builds Python package (wheel & sdist)
-    - Automatically publishes to PyPI (requires `UV_PUBLISH_TOKEN` secret)
-    - Uploads all artifacts to GitHub Release
-    - Note: This is a template demonstration workflow. Adjust to your project needs.
-
-- Publish Docker Image (`build_image.yml`)
-
-    - Trigger: Push to `main` and tags `v*`
-    - Builds and pushes a Docker image to GHCR: `ghcr.io/<owner>/<repo>`
-    - Setup needed: none (uses `GITHUB_TOKEN`); ensure `docker/Dockerfile` defines `prod` target
-
-- Release Drafter (`release_drafter.yml`)
-
-    - Trigger: Push to `main` and PR events
-    - Maintains a draft release based on Conventional Commits
-
-- Pull Request Labeler (`auto_labeler.yml`)
-
-    - Trigger: PRs and pushes
-    - Auto-applies labels defined in `.github/labeler.yml`
-
-- Secret Scanning (`secret_scan.yml`)
-
-    - Trigger: Push and PR
-    - Runs gitleaks to detect leaked secrets
-
-- Semantic Pull Request (`semantic-pull-request.yml`)
-
-    - Trigger: PR open/edit/sync
-    - Enforces Conventional Commit style PR titles
-
-### CI/CD Configuration Checklist
-
-- Conventional commits for PR titles (enforced by the workflow)
-- Optional: set `UV_PUBLISH_TOKEN` secret to publish to PyPI (Settings → Secrets and variables → Actions)
-- Optional: enable GitHub Pages for docs deployment (Settings → Pages → Source: GitHub Actions)
-- Optional: ensure GHCR permissions for Docker image publishing (Settings → Actions → General → Workflow permissions: Read and write)
-- Container Registry permissions are handled automatically via `GITHUB_TOKEN`
-
-## 🧩 Example CLI
-
-Console entry points are defined in `pyproject.toml` as `repo_template` and `cli`. The example returns a simple `Response` model; replace with your own CLI logic.
-
-```bash
-uv run repo_template
-```
-
-## 🤝 Contributing
-
-- Open issues/PRs
-- Follow the coding style (ruff, type hints)
-- Use Conventional Commit messages and descriptive PR titles
-
-## 📄 License
-
-MIT — see `LICENSE`.
+MIT
