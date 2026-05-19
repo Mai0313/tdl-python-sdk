@@ -7,9 +7,6 @@ LABEL maintainer="Wei Lee <mai@mai0313.com>" \
     org.label-schema.schema-version="1.0" \
     com.centurylinklabs.watchtower.stop-signal="SIGINT"
 
-# Install python packages
-RUN git config --global http.sslVerify false
-
 # Install Fonts for zsh p10k
 # 1. 安裝 zsh vim wget 和 fontconfig
 RUN apt-get update && apt-get install -y zsh vim wget fontconfig && \

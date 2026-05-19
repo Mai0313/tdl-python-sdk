@@ -18,7 +18,7 @@ If a user asks to add features or modify code, first confirm whether they want t
 
 ## Project Overview
 
-This is a **production-ready Python project template** using modern tooling with `uv` for dependency management, comprehensive CI/CD, Docker support, and MkDocs Material documentation. The template provides a complete scaffold that can be quickly adapted for new Python projects.
+This is a **production-ready Python project template** using modern tooling with `uv` for dependency management, comprehensive CI/CD, Docker support, and Zensical documentation. The template provides a complete scaffold that can be quickly adapted for new Python projects.
 
 ## Critical Architecture Decisions
 
@@ -36,10 +36,10 @@ This is a **production-ready Python project template** using modern tooling with
 - Run commands: `uv run <command>` to ensure correct environment
 - The project is configured as `managed = true` and `package = true` in `[tool.uv]`
 
-### Dual CLI Entry Points
+### CLI Entry Point
 
-- Main CLI: `uv run tdl_sdk` or `uv run cli` (via `project.scripts` in pyproject.toml)
-- Both `cli` and `tdl_sdk` commands point to `tdl_sdk.cli:main`
+- Main CLI: `uv run tdl-sdk` (via `project.scripts` in pyproject.toml)
+- The `tdl-sdk` command points to `tdl_sdk.cli:main`
 
 ## Developer Workflows
 
@@ -48,17 +48,17 @@ This is a **production-ready Python project template** using modern tooling with
 ```bash
 make uv-install               # Install uv (only needed once)
 uv sync                       # Install all dependencies
-uv tool install pre-commit    # Or: uv sync --group dev
-make format                   # Run pre-commit hooks
+uvx pre-commit install        # Or: uv sync --group dev
+make fmt                      # Run pre-commit hooks
 ```
 
 ### Common Commands
 
-- `make format` or `uv run pre-commit run -a` - Run ALL pre-commit hooks (ruff, mypy, mdformat, codespell, nbstripout, gitleaks)
+- `make fmt` or `uv run pre-commit run -a` - Run ALL pre-commit hooks (ruff, mypy, mdformat, codespell, nbstripout, gitleaks)
 - `make test` - Run pytest with coverage (80% minimum, fails below threshold)
 - `make clean` - Remove all build artifacts, caches, and generated docs
 - `make gen-docs` - Generate API docs from `src/` and `scripts/` into `docs/Reference/` and `docs/Scripts/`
-- `uv run mkdocs serve` - Start docs server at `http://0.0.0.0:9987`
+- `uv run zensical serve` - Start docs server at `http://0.0.0.0:9987`
 
 ### Testing Philosophy
 
@@ -72,8 +72,8 @@ make format                   # Run pre-commit hooks
 
 - Hooks run on: pre-commit, post-checkout, post-merge, post-rewrite
 - This ensures consistency across branch switches and merges
-- Use `make format` to manually trigger all hooks
-- **After every code change, always run `uv run pre-commit run -a` (or `make format`) to ensure all hooks pass before committing.**
+- Use `make fmt` to manually trigger all hooks
+- **After every code change, always run `uv run pre-commit run -a` (or `make fmt`) to ensure all hooks pass before committing.**
 
 ## Code Conventions
 
@@ -150,13 +150,13 @@ make format                   # Run pre-commit hooks
 
 - Script: `scripts/gen_docs.py` generates markdown docs from Python files/classes
 - Two modes: `--mode class` (default, one page per class) or `--mode file` (one page per file)
-- Preserves folder structure in output: `src/tdl_sdk/cli.py` → `docs/Reference/cli.md`
+- Preserves folder structure in output: `src/tdl_sdk/cli.py` -> `docs/Reference/cli.md`
 - Async file processing with `anyio` and rich progress bars
 - Optional notebook execution via `--execute` flag
 - Concurrency controlled via `--concurrency` (default: 10)
 - Excludes: `.venv` by default, customize with `--exclude`
 
-### MkDocs Material Configuration
+### Zensical Configuration
 
 - Docs server: `http://0.0.0.0:9987` (not localhost)
 - Uses mkdocstrings with inheritance diagrams via `show_inheritance_diagram: true`
@@ -167,7 +167,7 @@ make format                   # Run pre-commit hooks
 
 ### Multi-Stage Dockerfile
 
-- Base: `nikolaik/python-nodejs:python3.11-nodejs22` (Python + Node.js)
+- Base: `python:3.12-slim-bookworm` (Python)
 - Uses official `ghcr.io/astral-sh/uv:latest` for uv/uvx binaries
 - Production stage: `uv sync --no-dev` for minimal image
 - Workdir: `/app`
@@ -219,7 +219,7 @@ When creating or modifying `.github/workflows/*.yml` files, adhere to the follow
 ### Documentation Deploy (.github/workflows/deploy.yml)
 
 - Auto-generates docs with `make gen-docs`
-- Deploys to GitHub Pages via `mkdocs gh-deploy`
+- Builds site via `zensical build` and deploys to GitHub Pages
 
 ### Docker Image Build (.github/workflows/build_image.yml)
 
@@ -257,7 +257,7 @@ When creating or modifying `.github/workflows/*.yml` files, adhere to the follow
 
 - Alternative to Makefile: `uv run poe <task>`
 - Tasks defined in `[tool.poe.tasks]` section of pyproject.toml
-- Example: `uv run poe docs` runs `make gen-docs` then `mkdocs serve`
+- Example: `uv run poe docs` runs `make gen-docs` then `zensical serve`
 
 ### i18n Documentation
 
@@ -273,7 +273,7 @@ This section describes the essential steps to transform this template into your 
 Use GitHub's "Use this template" button or clone directly:
 
 ```bash
-git clone https://github.com/Mai0313/tdl_sdk.git my_new_project
+git clone https://github.com/Mai0313/tdl-python-sdk.git my_new_project
 cd my_new_project
 ```
 
@@ -305,7 +305,7 @@ Edit `pyproject.toml` to update:
 
 ### Step 5: Update Repository URLs
 
-Replace `Mai0313/tdl_sdk` with your repository path:
+Replace `Mai0313/tdl-python-sdk` with your repository path:
 
 - Update `mkdocs.yml`: repo_name, repo_url, site_url
 - Update all three README files: badges, links, and "Use this template" URL
@@ -331,8 +331,8 @@ Replace author details with your own:
 
 ```bash
 uv sync                       # Install dependencies
-uv tool install pre-commit    # Setup pre-commit
-make format                   # Run pre-commit hooks
+uvx pre-commit install        # Setup pre-commit git hooks
+make fmt                      # Run pre-commit hooks
 make test                     # Verify tests pass
 ```
 
@@ -352,7 +352,7 @@ make test                     # Verify tests pass
 
 ## Critical Usage Guidelines
 
-- **After every code change, always run `uv run pre-commit run -a` (or `make format`) before committing to ensure all hooks (ruff, mypy, mdformat, codespell, etc.) pass.**
+- **After every code change, always run `uv run pre-commit run -a` (or `make fmt`) before committing to ensure all hooks (ruff, mypy, mdformat, codespell, etc.) pass.**
 - **All commit messages and PR titles must be in English and follow [Conventional Commits](https://www.conventionalcommits.org/)** (e.g. `feat: add login page`, `fix(api): handle null response`)
 - Always use `uv sync` for installing dependencies, never use `pip install`
 - Always prefix script execution with `uv run <command>` to ensure correct environment
