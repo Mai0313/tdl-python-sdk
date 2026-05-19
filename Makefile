@@ -18,8 +18,6 @@ uv-install:  ## Install uv on your system
 fmt: ## Run pre-commit hooks
 	uv run pre-commit run -a
 
-format: fmt ## Compatibility alias for fmt
-
 test: ## Run all tests
 	uv run pytest
 
@@ -50,6 +48,6 @@ gen-docs:  ## Generate documentation
 		-e 's|](README\.zh-TW\.md)|](../zh-TW/index.md)|g' \
 		-e 's|](README\.zh-CN\.md)|](index.md)|g' \
 		./docs/zh-CN/index.md
-	uv run ./scripts/gen_docs.py --source ./src/tdl_sdk --output ./docs/Reference gen_docs
+	uv run ./scripts/gen_docs.py --source ./src --output ./docs/Reference gen_docs
 	uv run ./scripts/gen_docs.py --source ./scripts --output ./docs/Scripts gen_docs
 	uv run ./scripts/gen_docs.py build_nav
