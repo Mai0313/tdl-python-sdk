@@ -1,132 +1,70 @@
 # Contributing Guide
 
-Thank you for your interest in contributing to this Python project. This document describes how to set up the development environment, the conventions used by the project, and the workflow expected for issues and pull requests.
+This guide describes how to set up `tdl-python-sdk`, run the local quality gates, and keep changes aligned with the current SDK layout.
 
-## Table of Contents
-
-- [Code of Conduct](#code-of-conduct)
-- [Ways to Contribute](#ways-to-contribute)
-- [Reporting Issues](#reporting-issues)
-- [Development Setup](#development-setup)
-- [Local Workflow](#local-workflow)
-- [Testing](#testing)
-- [Documentation](#documentation)
-- [Branching Model](#branching-model)
-- [Commit Convention](#commit-convention)
-- [Pull Request Process](#pull-request-process)
-- [Code Review](#code-review)
-- [Coding Standards](#coding-standards)
-- [Security Reports](#security-reports)
-- [Licensing](#licensing)
-
-## Code of Conduct
-
-All contributors are expected to behave professionally and respectfully. Personal attacks, harassment, and discriminatory language are not tolerated. By participating, you agree to uphold a welcoming environment for everyone.
-
-## Ways to Contribute
-
-- Reporting bugs and reproducible issues
-- Proposing or implementing new features
-- Improving documentation, examples, and tutorials
-- Reviewing pull requests and providing constructive feedback
-- Suggesting tooling, performance, or security improvements
-
-## Reporting Issues
-
-Before opening a new issue:
-
-1. Search existing issues to avoid duplicates.
-2. Confirm the problem reproduces on the latest release or `main`.
-3. Use the appropriate issue template.
-
-Please include:
-
-- A clear, descriptive title
-- The Python version, OS, and project version or commit
-- Minimal reproduction steps and a code snippet when applicable
-- Expected vs. actual behavior
-- Full stack traces, logs, or screenshots
-
-## Development Setup
+## Local Setup
 
 This project uses [`uv`](https://docs.astral.sh/uv/) for Python and dependency management.
 
 ```bash
-# Install uv (one-time setup)
+# Install uv if needed
 make uv-install
 
 # Clone your fork
-git clone https://github.com/<your-username>/<repo>.git
-cd <repo>
+git clone https://github.com/<your-username>/tdl-python-sdk.git
+cd tdl-python-sdk
 
-# Install dependencies and create the virtual environment
-uv sync
+# Install runtime, development, test, and documentation dependencies
+uv sync --all-groups
 
-# Install pre-commit hooks
+# Install the Git hooks locally
 uv run pre-commit install
 ```
 
-Supported Python versions are declared in `pyproject.toml`. Use `uv` to manage interpreters when needed:
+Common commands are exposed through the `Makefile`:
 
 ```bash
-uv python install 3.12
-```
-
-## Local Workflow
-
-Common tasks are exposed via the `Makefile`. Run `make help` to list all targets. Frequently used ones:
-
-```bash
-make fmt       # Run pre-commit hooks (ruff, mdformat, codespell, mypy, ...)
+make help      # Show available targets
+make fmt       # Run pre-commit hooks
 make test      # Run the test suite
-make gen-docs  # Generate documentation
-make clean     # Remove caches and build artifacts
+make gen-docs  # Regenerate MkDocs source pages
+make clean     # Remove generated files, caches, and build artifacts
 ```
 
-Always run `make fmt` and `make test` before opening a pull request.
-
-## Testing
-
-- Tests are written with **pytest** and live under `tests/`.
-- Coverage is enforced at **80%** minimum; new code should not lower the project's coverage.
-- Use `pytest-xdist` for parallel execution where helpful.
-
-Useful commands:
+Run the full local gate before opening a pull request:
 
 ```bash
-uv run pytest                       # Run all tests
-uv run pytest tests/test_foo.py     # Run a single file
-uv run pytest -k "expression"       # Run tests matching an expression
-uv run pytest --cov                 # Run with coverage
+uv run pre-commit run -a
+uv run pytest
 ```
 
-Add tests for every behavioral change. Bug fixes should include a regression test.
+## Project Layout
 
-## Documentation
+| Path                      | Purpose                                                                 |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `src/tdl_sdk/__init__.py` | Public package exports.                                                 |
+| `src/tdl_sdk/_client.py`  | User-facing `TDL` facade for command groups.                            |
+| `src/tdl_sdk/_models.py`  | Pydantic result and option models, including CLI flag serialization.    |
+| `src/tdl_sdk/_enums.py`   | Enum values used by option models and examples.                         |
+| `src/tdl_sdk/_runner.py`  | Subprocess runner that invokes the external `tdl` binary.               |
+| `tests/`                  | Pytest coverage for models, enums, runner behavior, and client methods. |
+| `scripts/`                | Repository tooling, including generated documentation helpers.          |
+| `.github/workflows/`      | CI, release, quality, docs deploy, and automation workflows.            |
+| `docs/`                   | Generated by `make gen-docs`; ignored by Git and not edited directly.   |
 
-Documentation uses **Zensical** with `mkdocstrings` and lives under `docs/`. To preview locally:
+## Workflow
 
-```bash
-make gen-docs
-uv run zensical serve  # http://0.0.0.0:9987
-```
-
-Update README, docstrings, and examples when changing public behavior. Documentation contributions are first-class and very welcome.
-
-## Branching Model
-
-- `main` is the default branch and must always be releasable.
-- Feature branches: `feat/<short-description>`
-- Bug fix branches: `fix/<short-description>`
-- Documentation branches: `docs/<short-description>`
+- `main` is the default branch and should stay releasable.
+- Prefer branch names such as `feat/<short-description>`, `fix/<short-description>`, `docs/<short-description>`, or `chore/<short-description>`.
+- Pull request titles are validated by the Semantic Pull Request workflow and must follow Conventional Commits.
+- Keep pull requests focused. Avoid unrelated refactors when changing SDK behavior or docs.
+- Mark work-in-progress changes as draft until tests and pre-commit checks are ready.
 
 ## Commit Convention
 
-Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) and **must be written in English**.
+Commit messages and pull request titles must be written in English and follow [Conventional Commits](https://www.conventionalcommits.org/).
 
-Format:
-
-```
+```text
 <type>(<optional scope>): <short summary>
 
 <optional body>
@@ -134,55 +72,82 @@ Format:
 <optional footer>
 ```
 
-Allowed types:
+Common types:
 
-| Type       | Purpose                                                 |
-| ---------- | ------------------------------------------------------- |
-| `feat`     | A new feature                                           |
-| `fix`      | A bug fix                                               |
-| `refactor` | Code change that neither fixes a bug nor adds a feature |
-| `doc`      | Documentation-only changes                              |
-| `perf`     | Performance improvement                                 |
-| `style`    | Formatting or stylistic changes                         |
-| `test`     | Adding or correcting tests                              |
-| `chore`    | Build, tooling, or auxiliary changes                    |
-| `ci`       | Continuous integration changes                          |
-| `revert`   | Reverting a previous commit                             |
+| Type       | Purpose                                                |
+| ---------- | ------------------------------------------------------ |
+| `feat`     | User-visible feature                                   |
+| `fix`      | Bug fix                                                |
+| `docs`     | Documentation-only change                              |
+| `test`     | Test-only change or regression coverage                |
+| `refactor` | Code change that does not add a feature or fix a bug   |
+| `perf`     | Performance improvement                                |
+| `style`    | Formatting-only change                                 |
+| `build`    | Build system, dependency, or packaging change          |
+| `ci`       | Continuous integration change                          |
+| `chore`    | Maintenance task that does not affect runtime behavior |
+| `revert`   | Revert of an earlier commit                            |
 
-Append `!` after the type or include `BREAKING CHANGE:` in the footer to indicate a breaking change. Reference issues with `Closes #123` or `Refs #123`.
+Use `!` after the type or add a `BREAKING CHANGE:` footer for breaking changes. Reference related issues with `Closes #123` or `Refs #123` when applicable.
 
-## Pull Request Process
+## Code Conventions
 
-1. Ensure your branch is up to date with the target branch.
-2. Run `make fmt` and `make test` locally; both must pass.
-3. Ensure CI checks pass on the pull request.
-4. Use a descriptive title following the commit convention; it is validated by **semantic-pull-request**.
-5. Fill out the pull request template, including motivation, summary, and testing notes.
-6. Link related issues and design documents.
-7. Mark the PR as **draft** while still in progress.
-8. Request review only after self-review and a green CI.
+- The SDK wraps the external `tdl` binary; do not replace command failures by swallowing exceptions. Find the root cause first, then fix or document it.
+- Public imports belong in `src/tdl_sdk/__init__.py`.
+- Command option models belong in `src/tdl_sdk/_models.py` and should derive from `_BaseOptions` when they serialize to CLI flags.
+- Shared enums belong in `src/tdl_sdk/_enums.py`; examples should use enum values instead of raw strings when an enum exists.
+- The subprocess boundary belongs in `src/tdl_sdk/_runner.py`. Preserve stdout, stderr, return code, timeout, and missing-binary behavior when changing runner logic.
+- Use Pydantic field aliases for CLI flags that are Python keywords or contain hyphens, such as `from`, `continue`, and `dry-run`.
+- Keep generated docs out of source control. Update README files and docstrings, then regenerate with `make gen-docs` when checking documentation output.
+- The current source tree does not include `tdl_sdk.cli` or `src/tdl_sdk/cli.py`. Do not advertise package console commands in user docs until that entrypoint is implemented or the manifest is corrected.
 
-Pull requests are typically merged via **squash merge** to keep history linear.
+## Testing And Quality Gates
 
-## Code Review
+Tests use `pytest` and live under `tests/`. The pytest configuration in `pyproject.toml` enables coverage reports, doctest modules, xdist, strict markers, and an 80% coverage threshold.
 
-- Address all review comments or explain why a change is not needed.
-- Keep discussions technical, focused, and respectful.
-- Resolve conversations only after the concern has been addressed.
+```bash
+uv run pytest
+uv run pytest tests/test_models.py
+uv run pytest -k "download"
+```
 
-## Coding Standards
+Pre-commit runs the repository formatting and static checks:
 
-- **Formatting and linting**: handled by `ruff` (configured in `pyproject.toml`)
-- **Typing**: `mypy` is configured with the Pydantic plugin; new code should be type-annotated
-- **Spelling**: enforced by `codespell` via pre-commit
-- **Notebooks**: stripped of outputs by `nbstripout`
+```bash
+uv run pre-commit run -a
+```
 
-Prefer clarity over cleverness, and avoid unrelated refactors in feature or fix pull requests.
+The pull request quality workflow runs `uvx pre-commit run -a`. The tests workflow runs Python 3.11, 3.12, and 3.13 on Ubuntu for branches that are not skipped by workflow rules.
+
+## Documentation
+
+- `README.md` is the canonical user-facing document.
+- `README.zh-TW.md` and `README.zh-CN.md` mirror the canonical README structure.
+- Preserve badges across README translations.
+- Preserve code blocks, paths, environment variables, identifiers, provider names, and commands when translating.
+- `make gen-docs` copies README files into generated MkDocs pages and creates API reference pages from `src/` and `scripts/`.
+
+Preview documentation locally:
+
+```bash
+make gen-docs
+uv run zensical serve
+```
+
+## Release Process
+
+Release packaging is driven by GitHub Actions on `v*` tags and manual workflow dispatch:
+
+- `build_release.yml` builds Python packages with `uv build` and publishes with `uv publish` when credentials are available.
+- `deploy.yml` regenerates docs and publishes the built site to GitHub Pages.
+- `release_drafter.yml` prepares draft release notes.
+
+The executable build job currently expects a CLI file path that does not match the SDK source layout. Fix that packaging entrypoint before relying on executable release artifacts.
 
 ## Security Reports
 
-Please **do not** report security vulnerabilities through public issues. Refer to [`SECURITY.md`](./SECURITY.md) for the responsible disclosure process.
+Do not include secrets, tokens, session files, or private Telegram data in public issues or pull requests. For vulnerabilities, contact the maintainers privately instead of posting exploit details publicly.
 
 ## Licensing
 
-By contributing, you agree that your contributions will be licensed under the project's license (see [`LICENSE`](../LICENSE)). Ensure that you have the right to submit any code, content, or assets you contribute.
+By contributing, you agree that your contributions are licensed under the project license in [`LICENSE`](../LICENSE).

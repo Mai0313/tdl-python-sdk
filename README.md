@@ -3,7 +3,7 @@
 # TDL Python SDK
 
 [![PyPI version](https://img.shields.io/pypi/v/tdl-python-sdk.svg)](https://pypi.org/project/tdl-python-sdk/)
-[![python](https://img.shields.io/badge/-Python_%7C_3.11%7C_3.12%7C_3.13%7C_3.14-blue?logo=python&logoColor=white)](https://www.python.org/downloads/source/)
+[![python](https://img.shields.io/badge/Python-%3E%3D3.11-blue?logo=python&logoColor=white)](https://www.python.org/downloads/source/)
 [![uv](https://img.shields.io/badge/-uv_dependency_management-2C5F2D?logo=python&logoColor=white)](https://docs.astral.sh/uv/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Pydantic v2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydantic/pydantic/main/docs/badge/v2.json)](https://docs.pydantic.dev/latest/contributing/#badges)
@@ -16,21 +16,24 @@
 
 </div>
 
-A type-safe Python SDK for [TDL](https://github.com/iyear/tdl) (Telegram Downloader). Wraps the `tdl` CLI binary via subprocess and provides a Pythonic, Pydantic-powered interface for all TDL operations.
+A type-safe Python SDK for [TDL](https://github.com/iyear/tdl) (Telegram Downloader). The package wraps the external `tdl` CLI binary with subprocess execution and exposes a Pydantic-powered Python API for login, chat export, download, upload, forward, backup, recover, migrate, and extension operations.
 
 Other Languages: [English](README.md) | [繁體中文](README.zh-TW.md) | [简体中文](README.zh-CN.md)
 
 ## Features
 
-- Full coverage of all `tdl` commands: login, chat, download, upload, forward, backup, recover, migrate, extension
-- Strict typing with Pydantic BaseModel for all options and results
-- Enum types for mode/type parameters (LoginType, ExportType, ForwardMode, ListOutput)
-- Custom exception hierarchy with stdout/stderr/return_code attached
-- CLI flag serialization via `@computed_field` properties
+- Python facade for the main `tdl` command groups.
+- Pydantic option models for validation and CLI flag serialization.
+- Enum types for common mode and output parameters.
+- Structured `TDLResult` responses with stdout, stderr, and return code.
+- Custom exceptions for missing binaries, command failures, and timeouts.
 
-## Prerequisites
+## Requirements
 
-Install the [TDL](https://github.com/iyear/tdl) CLI tool first:
+- Python 3.11 or newer. CI currently validates Python 3.11, 3.12, and 3.13.
+- The [TDL](https://github.com/iyear/tdl) CLI binary installed separately.
+
+Install `tdl` first:
 
 ```bash
 # macOS / Linux
@@ -40,7 +43,7 @@ curl -sSL https://docs.iyear.me/tdl/install.sh | bash
 go install github.com/iyear/tdl@latest
 ```
 
-Verify installation:
+Verify that the binary is available:
 
 ```bash
 tdl version
@@ -58,68 +61,59 @@ uv add tdl-python-sdk
 ## Quick Start
 
 ```python
-from tdl_sdk import TDL, GlobalOptions, LoginOptions, LoginType
+from tdl_sdk import GlobalOptions, LoginOptions, LoginType, TDL
 
-# Create client with global options
 client = TDL(global_options=GlobalOptions(ns="my_session", proxy="socks5://127.0.0.1:1080"))
 
-# Login via QR code
 client.login(LoginOptions(login_type=LoginType.QR))
 ```
 
-## Usage Guide
+Use `tdl_path` when the binary is not on `PATH`:
+
+```python
+from tdl_sdk import TDL
+
+client = TDL(tdl_path="/usr/local/bin/tdl", timeout=600)
+```
+
+## Common Usage
 
 ### Login
 
-TDL supports three login methods: desktop client, verification code, and QR code.
+TDL supports desktop, verification code, and QR login flows.
 
 ```python
-from tdl_sdk import TDL, LoginOptions, LoginType
+from tdl_sdk import LoginOptions, LoginType, TDL
 
 client = TDL()
 
-# Login via QR code (recommended)
 client.login(LoginOptions(login_type=LoginType.QR))
-
-# Login via desktop client (auto-detect path)
 client.login(LoginOptions(login_type=LoginType.DESKTOP))
-
-# Login via desktop client with custom path and passcode
 client.login(
     LoginOptions(
         login_type=LoginType.DESKTOP, desktop="/path/to/Telegram Desktop", passcode="your_passcode"
     )
 )
-
-# Login via verification code
 client.login(LoginOptions(login_type=LoginType.CODE))
 ```
 
-### Chat Operations
-
-#### List Chats
+### Chat
 
 ```python
-from tdl_sdk import TDL, ChatListOptions, ListOutput
+from tdl_sdk import (
+    ChatExportOptions,
+    ChatListOptions,
+    ChatUsersOptions,
+    ExportType,
+    ListOutput,
+    TDL,
+)
 
 client = TDL()
 
-# List all chats as table
-client.chat_ls()
-
-# List chats as JSON with filter
 result = client.chat_ls(ChatListOptions(output=ListOutput.JSON, chat_filter="Type == 'channel'"))
 print(result.stdout)
-```
 
-#### Export Messages
-
-```python
-from tdl_sdk import TDL, ChatExportOptions, ExportType
-
-client = TDL()
-
-# Export last 100 messages from a channel
 client.chat_export(
     ChatExportOptions(
         chat="my_channel",
@@ -130,52 +124,33 @@ client.chat_export(
     )
 )
 
-# Export all messages (including non-media)
-client.chat_export(
-    ChatExportOptions(
-        chat="my_channel", export_all=True, with_content=True, output="full_export.json"
-    )
-)
-```
-
-#### Export Users
-
-```python
-from tdl_sdk import TDL, ChatUsersOptions
-
-client = TDL()
-
-# Export all users from a channel
 client.chat_users(ChatUsersOptions(chat="my_channel", output="users.json"))
 ```
 
 ### Download
 
 ```python
-from tdl_sdk import TDL, DownloadOptions
+from tdl_sdk import DownloadOptions, TDL
 
 client = TDL()
 
-# Download by Telegram message links
 client.download(
     DownloadOptions(
         url=["https://t.me/channel/123", "https://t.me/channel/456"], download_dir="./downloads"
     )
 )
 
-# Download from exported JSON with filters
 client.download(
     DownloadOptions(
         file=["export.json"],
         download_dir="./media",
-        include=["mp4", "mkv"],  # only video files
-        skip_same=True,  # skip duplicates
-        takeout=True,  # use takeout for lower flood limits
+        include=["mp4", "mkv"],
+        skip_same=True,
+        takeout=True,
         template="{{ .DialogID }}_{{ .MessageID }}_{{ filenamify .FileName }}",
     )
 )
 
-# Serve media as HTTP server
 client.download(DownloadOptions(file=["export.json"], serve=True, port=9090))
 ```
 
@@ -186,29 +161,22 @@ from tdl_sdk import TDL, UploadOptions
 
 client = TDL()
 
-# Upload files to Saved Messages
 client.upload(UploadOptions(path=["/data/video.mp4", "/data/photos/"]))
-
-# Upload to a specific chat as photos
 client.upload(UploadOptions(path=["./images/"], chat="my_channel", photo=True))
-
-# Upload and remove local files after success
 client.upload(UploadOptions(path=["./temp_files/"], chat="my_channel", rm=True))
 ```
 
 ### Forward
 
 ```python
-from tdl_sdk import TDL, ForwardOptions, ForwardMode
+from tdl_sdk import ForwardMode, ForwardOptions, TDL
 
 client = TDL()
 
-# Forward messages (direct mode)
 client.forward(
     ForwardOptions(forward_from=["https://t.me/source_channel/123"], to="target_channel")
 )
 
-# Clone messages (no forward header)
 client.forward(
     ForwardOptions(
         forward_from=["https://t.me/source/123", "export.json"],
@@ -218,57 +186,46 @@ client.forward(
     )
 )
 
-# Dry run to preview
 result = client.forward(
     ForwardOptions(forward_from=["export.json"], to="target_channel", dry_run=True)
 )
 print(result.stdout)
 ```
 
-### Backup / Recover / Migrate
+### Backup, Recover, And Migrate
 
 ```python
-from tdl_sdk import TDL, BackupOptions, RecoverOptions, MigrateOptions
+from tdl_sdk import BackupOptions, MigrateOptions, RecoverOptions, TDL
 
 client = TDL()
 
-# Backup session data
 client.backup(BackupOptions(dst="./my_backup.tdl"))
-
-# Recover from backup
 client.recover(RecoverOptions(file="./my_backup.tdl"))
-
-# Migrate to file-based storage
 client.migrate(MigrateOptions(to={"type": "file", "path": "/new/storage"}))
 ```
 
-### Extension Management
+### Extensions
 
 ```python
-from tdl_sdk import TDL, ExtInstallOptions
+from tdl_sdk import ExtInstallOptions, TDL
 
 client = TDL()
 
-# Install an extension
 client.ext_install("github.com/user/tdl-ext-name")
-
-# Force reinstall
 client.ext_install("github.com/user/tdl-ext-name", ExtInstallOptions(force=True))
 
-# List installed extensions
 result = client.ext_list()
 print(result.stdout)
 
-# Upgrade / Remove
 client.ext_upgrade("ext-name")
 client.ext_remove("ext-name")
 ```
 
-### Error Handling
+## Error Handling
 
 ```python
-from tdl_sdk import TDL, DownloadOptions
-from tdl_sdk import TDLError, TDLNotFoundError, TDLCommandError, TDLTimeoutError
+from tdl_sdk import DownloadOptions, TDL
+from tdl_sdk import TDLCommandError, TDLError, TDLNotFoundError, TDLTimeoutError
 
 client = TDL(timeout=300)
 
@@ -284,51 +241,34 @@ except TDLError as e:
     print(f"Unexpected error: {e}")
 ```
 
-### Global Options
+## Global Options
 
-Configure shared settings for all commands:
+Global options are serialized before the command path and apply to every `tdl` command invoked by a client.
 
 ```python
-from tdl_sdk import TDL, GlobalOptions
+from tdl_sdk import GlobalOptions, TDL
 
 client = TDL(
     global_options=GlobalOptions(
-        ns="work_session",  # session namespace
+        ns="work_session",
         proxy="socks5://127.0.0.1:1080",
-        threads=8,  # max threads per transfer
-        limit=4,  # max concurrent tasks
-        pool=16,  # DC pool size
-        debug=True,  # enable debug output
+        threads=8,
+        limit=4,
+        pool=16,
+        debug=True,
         reconnect_timeout="10m",
         storage={"type": "bolt", "path": "/custom/data"},
     ),
-    tdl_path="/usr/local/bin/tdl",  # custom binary path
-    timeout=600,  # default timeout (seconds)
+    tdl_path="/usr/local/bin/tdl",
+    timeout=600,
 )
 ```
 
-## Architecture
+## Resources
 
-```
-src/tdl_sdk/
-    __init__.py          # Public API exports
-    _exceptions.py       # TDLError hierarchy
-    _enums.py            # LoginType, ExportType, ForwardMode, ListOutput
-    _models.py           # Pydantic models (GlobalOptions, *Options, TDLResult)
-    _runner.py           # TDLRunner - subprocess execution layer
-    _client.py           # TDL - user-facing facade
-```
-
-All classes are Pydantic BaseModel. Option models provide `cli_dict` and `cli_args` as `@computed_field` properties for automatic CLI flag serialization.
-
-## Development
-
-```bash
-git clone https://github.com/Mai0313/tdl-python-sdk.git
-cd tdl-python-sdk
-uv sync
-make test
-```
+- [API documentation](https://mai0313.github.io/tdl-python-sdk)
+- [TDL upstream project](https://github.com/iyear/tdl)
+- [Contributing guide](.github/CONTRIBUTING.md)
 
 ## License
 

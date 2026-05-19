@@ -3,7 +3,7 @@
 # TDL Python SDK
 
 [![PyPI version](https://img.shields.io/pypi/v/tdl-python-sdk.svg)](https://pypi.org/project/tdl-python-sdk/)
-[![python](https://img.shields.io/badge/-Python_%7C_3.11%7C_3.12%7C_3.13%7C_3.14-blue?logo=python&logoColor=white)](https://www.python.org/downloads/source/)
+[![python](https://img.shields.io/badge/Python-%3E%3D3.11-blue?logo=python&logoColor=white)](https://www.python.org/downloads/source/)
 [![uv](https://img.shields.io/badge/-uv_dependency_management-2C5F2D?logo=python&logoColor=white)](https://docs.astral.sh/uv/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Pydantic v2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydantic/pydantic/main/docs/badge/v2.json)](https://docs.pydantic.dev/latest/contributing/#badges)
@@ -16,31 +16,34 @@
 
 </div>
 
-类型安全的 [TDL](https://github.com/iyear/tdl)（Telegram Downloader）Python SDK。通过 subprocess 包装 `tdl` CLI，提供 Pydantic 驱动的 Pythonic 接口。
+类型安全的 [TDL](https://github.com/iyear/tdl)（Telegram Downloader）Python SDK。这个 package 通过 subprocess 执行外部 `tdl` CLI binary，并提供由 Pydantic 驱动的 Python API，可用于 login、chat export、download、upload、forward、backup、recover、migrate 和 extension 操作。
 
 其他语言: [English](README.md) | [繁體中文](README.zh-TW.md) | [简体中文](README.zh-CN.md)
 
 ## 特性
 
-- 完整覆盖所有 `tdl` 命令：login、chat、download、upload、forward、backup、recover、migrate、extension
-- 使用 Pydantic BaseModel 严格定义所有选项与结果类型
-- Enum 类型对应模式/类型参数（LoginType、ExportType、ForwardMode、ListOutput）
-- 自定义异常层次，附带 stdout/stderr/return_code
-- 通过 `@computed_field` 属性自动序列化 CLI flags
+- 主要 `tdl` command groups 的 Python facade。
+- 使用 Pydantic option models 做 validation 和 CLI flag serialization。
+- 以 Enum types 表示常用的 mode 和 output parameters。
+- 结构化 `TDLResult` responses，包含 stdout、stderr 和 return code。
+- 针对 missing binaries、command failures 和 timeouts 提供 custom exceptions。
 
-## 前置要求
+## 要求
 
-请先安装 [TDL](https://github.com/iyear/tdl) CLI 工具：
+- Python 3.11 或更新版本。CI 目前验证 Python 3.11、3.12 和 3.13。
+- 需要另外安装 [TDL](https://github.com/iyear/tdl) CLI binary。
+
+先安装 `tdl`：
 
 ```bash
 # macOS / Linux
 curl -sSL https://docs.iyear.me/tdl/install.sh | bash
 
-# 或通过 Go
+# or via Go
 go install github.com/iyear/tdl@latest
 ```
 
-确认安装成功：
+确认 binary 可用：
 
 ```bash
 tdl version
@@ -51,75 +54,66 @@ tdl version
 ```bash
 pip install tdl-python-sdk
 
-# 或使用 uv
+# or with uv
 uv add tdl-python-sdk
 ```
 
 ## 快速开始
 
 ```python
-from tdl_sdk import TDL, GlobalOptions, LoginOptions, LoginType
+from tdl_sdk import GlobalOptions, LoginOptions, LoginType, TDL
 
-# 创建带有全局选项的客户端
 client = TDL(global_options=GlobalOptions(ns="my_session", proxy="socks5://127.0.0.1:1080"))
 
-# 通过 QR code 登录
 client.login(LoginOptions(login_type=LoginType.QR))
 ```
 
-## 使用指南
+当 binary 不在 `PATH` 上时，请使用 `tdl_path`：
+
+```python
+from tdl_sdk import TDL
+
+client = TDL(tdl_path="/usr/local/bin/tdl", timeout=600)
+```
+
+## 常见用法
 
 ### 登录
 
-TDL 支持三种登录方式：桌面客户端、验证码、QR code。
+TDL 支持 desktop、verification code 和 QR login flows。
 
 ```python
-from tdl_sdk import TDL, LoginOptions, LoginType
+from tdl_sdk import LoginOptions, LoginType, TDL
 
 client = TDL()
 
-# 通过 QR code 登录（推荐）
 client.login(LoginOptions(login_type=LoginType.QR))
-
-# 通过桌面客户端登录（自动检测路径）
 client.login(LoginOptions(login_type=LoginType.DESKTOP))
-
-# 指定桌面客户端路径与密码
 client.login(
     LoginOptions(
         login_type=LoginType.DESKTOP, desktop="/path/to/Telegram Desktop", passcode="your_passcode"
     )
 )
-
-# 通过验证码登录
 client.login(LoginOptions(login_type=LoginType.CODE))
 ```
 
-### 聊天操作
-
-#### 列出聊天
+### Chat 操作
 
 ```python
-from tdl_sdk import TDL, ChatListOptions, ListOutput
+from tdl_sdk import (
+    ChatExportOptions,
+    ChatListOptions,
+    ChatUsersOptions,
+    ExportType,
+    ListOutput,
+    TDL,
+)
 
 client = TDL()
 
-# 以表格列出所有聊天
-client.chat_ls()
-
-# 以 JSON 格式列出，加上筛选条件
 result = client.chat_ls(ChatListOptions(output=ListOutput.JSON, chat_filter="Type == 'channel'"))
 print(result.stdout)
-```
 
-#### 导出消息
-
-```python
-from tdl_sdk import TDL, ChatExportOptions, ExportType
-
-client = TDL()
-
-# 导出频道最近 100 条消息
 client.chat_export(
     ChatExportOptions(
         chat="my_channel",
@@ -130,85 +124,59 @@ client.chat_export(
     )
 )
 
-# 导出所有消息（包含非媒体）
-client.chat_export(
-    ChatExportOptions(
-        chat="my_channel", export_all=True, with_content=True, output="full_export.json"
-    )
-)
-```
-
-#### 导出用户
-
-```python
-from tdl_sdk import TDL, ChatUsersOptions
-
-client = TDL()
-
-# 导出频道所有用户
 client.chat_users(ChatUsersOptions(chat="my_channel", output="users.json"))
 ```
 
-### 下载
+### Download
 
 ```python
-from tdl_sdk import TDL, DownloadOptions
+from tdl_sdk import DownloadOptions, TDL
 
 client = TDL()
 
-# 通过 Telegram 消息链接下载
 client.download(
     DownloadOptions(
         url=["https://t.me/channel/123", "https://t.me/channel/456"], download_dir="./downloads"
     )
 )
 
-# 从导出的 JSON 下载，附带筛选条件
 client.download(
     DownloadOptions(
         file=["export.json"],
         download_dir="./media",
-        include=["mp4", "mkv"],  # 仅视频文件
-        skip_same=True,  # 跳过重复文件
-        takeout=True,  # 使用 takeout 降低限流
+        include=["mp4", "mkv"],
+        skip_same=True,
+        takeout=True,
         template="{{ .DialogID }}_{{ .MessageID }}_{{ filenamify .FileName }}",
     )
 )
 
-# 以 HTTP 服务器提供媒体
 client.download(DownloadOptions(file=["export.json"], serve=True, port=9090))
 ```
 
-### 上传
+### Upload
 
 ```python
 from tdl_sdk import TDL, UploadOptions
 
 client = TDL()
 
-# 上传文件到「已保存的消息」
 client.upload(UploadOptions(path=["/data/video.mp4", "/data/photos/"]))
-
-# 上传到指定聊天（以照片形式）
 client.upload(UploadOptions(path=["./images/"], chat="my_channel", photo=True))
-
-# 上传后删除本地文件
 client.upload(UploadOptions(path=["./temp_files/"], chat="my_channel", rm=True))
 ```
 
-### 转发
+### Forward
 
 ```python
-from tdl_sdk import TDL, ForwardOptions, ForwardMode
+from tdl_sdk import ForwardMode, ForwardOptions, TDL
 
 client = TDL()
 
-# 直接转发消息
 client.forward(
     ForwardOptions(forward_from=["https://t.me/source_channel/123"], to="target_channel")
 )
 
-# 复制消息（无转发标头）
 client.forward(
     ForwardOptions(
         forward_from=["https://t.me/source/123", "export.json"],
@@ -218,117 +186,89 @@ client.forward(
     )
 )
 
-# 预览模式（不实际发送）
 result = client.forward(
     ForwardOptions(forward_from=["export.json"], to="target_channel", dry_run=True)
 )
 print(result.stdout)
 ```
 
-### 备份 / 恢复 / 迁移
+### Backup、Recover 和 Migrate
 
 ```python
-from tdl_sdk import TDL, BackupOptions, RecoverOptions, MigrateOptions
+from tdl_sdk import BackupOptions, MigrateOptions, RecoverOptions, TDL
 
 client = TDL()
 
-# 备份 session 数据
 client.backup(BackupOptions(dst="./my_backup.tdl"))
-
-# 从备份恢复
 client.recover(RecoverOptions(file="./my_backup.tdl"))
-
-# 迁移到文件式存储
 client.migrate(MigrateOptions(to={"type": "file", "path": "/new/storage"}))
 ```
 
-### 扩展管理
+### Extensions
 
 ```python
-from tdl_sdk import TDL, ExtInstallOptions
+from tdl_sdk import ExtInstallOptions, TDL
 
 client = TDL()
 
-# 安装扩展
 client.ext_install("github.com/user/tdl-ext-name")
-
-# 强制重新安装
 client.ext_install("github.com/user/tdl-ext-name", ExtInstallOptions(force=True))
 
-# 列出已安装扩展
 result = client.ext_list()
 print(result.stdout)
 
-# 升级 / 移除
 client.ext_upgrade("ext-name")
 client.ext_remove("ext-name")
 ```
 
-### 错误处理
+## 错误处理
 
 ```python
-from tdl_sdk import TDL, DownloadOptions
-from tdl_sdk import TDLError, TDLNotFoundError, TDLCommandError, TDLTimeoutError
+from tdl_sdk import DownloadOptions, TDL
+from tdl_sdk import TDLCommandError, TDLError, TDLNotFoundError, TDLTimeoutError
 
 client = TDL(timeout=300)
 
 try:
     client.download(DownloadOptions(url=["https://t.me/channel/123"]))
 except TDLNotFoundError:
-    print("找不到 tdl 可执行文件，请先安装 tdl。")
+    print("tdl binary not found. Please install tdl first.")
 except TDLTimeoutError as e:
-    print(f"命令超时：{e}")
+    print(f"Command timed out: {e}")
 except TDLCommandError as e:
-    print(f"命令失败（exit code {e.return_code}）：{e.stderr}")
+    print(f"Command failed (exit code {e.return_code}): {e.stderr}")
 except TDLError as e:
-    print(f"未预期错误：{e}")
+    print(f"Unexpected error: {e}")
 ```
 
-### 全局选项
+## Global Options
 
-为所有命令配置共享参数：
+Global options 会在 command path 前序列化，并套用到 client 执行的每个 `tdl` command。
 
 ```python
-from tdl_sdk import TDL, GlobalOptions
+from tdl_sdk import GlobalOptions, TDL
 
 client = TDL(
     global_options=GlobalOptions(
-        ns="work_session",  # session 命名空间
+        ns="work_session",
         proxy="socks5://127.0.0.1:1080",
-        threads=8,  # 每项传输的最大线程数
-        limit=4,  # 最大并发任务数
-        pool=16,  # DC 连接池大小
-        debug=True,  # 启用调试输出
+        threads=8,
+        limit=4,
+        pool=16,
+        debug=True,
         reconnect_timeout="10m",
         storage={"type": "bolt", "path": "/custom/data"},
     ),
-    tdl_path="/usr/local/bin/tdl",  # 自定义 binary 路径
-    timeout=600,  # 默认超时（秒）
+    tdl_path="/usr/local/bin/tdl",
+    timeout=600,
 )
 ```
 
-## 架构
+## 资源
 
-```
-src/tdl_sdk/
-    __init__.py          # 公开 API 导出
-    _exceptions.py       # TDLError 异常层次
-    _enums.py            # LoginType, ExportType, ForwardMode, ListOutput
-    _models.py           # Pydantic models (GlobalOptions, *Options, TDLResult)
-    _runner.py           # TDLRunner - subprocess 执行层
-    _client.py           # TDL - 用户接口 facade
-```
-
-所有 class 均为 Pydantic BaseModel。选项模型通过 `@computed_field` 属性提供 `cli_dict` 和 `cli_args`，自动序列化为 CLI flags。
-
-## 开发
-
-```bash
-git clone https://github.com/Mai0313/tdl-python-sdk.git
-cd tdl-python-sdk
-uv sync
-make test
-```
+- [API documentation](https://mai0313.github.io/tdl-python-sdk)
+- [TDL upstream project](https://github.com/iyear/tdl)
+- [Contributing guide](.github/CONTRIBUTING.md)
 
 ## 许可证
 
